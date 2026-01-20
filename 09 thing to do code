@@ -1,0 +1,22 @@
+# Tonkla 09
+from datetime import datetime
+
+name =  input('ใส่ชื่อเลยครับ: ')
+things_to_do = input('ใส่สิ่งที่ต้องทำ: ')
+time_to_do = input('ใส่เวลาที่ต้องการให้แจ้งเตือน: ')
+
+voice_sample =  "user_17-01-2026 2038.m4a"     #howทำให้มีเสียงสงสัยต้องใช้โปรแกรมอื่น
+print("ตั้งค่าเสียงเสร็จเรียบร้อย: ")
+
+
+alert_time =  time_to_do
+while True:
+    current_time = datetime.now().strftime("%H:%M") #ดึงเวลาให้เป็นแบบระบบปัจจุบัน
+    if current_time == alert_time:
+        print('แจ้งเตือน')
+        print(f"{name} ต้องทำแล้วนะ : {things_to_do} ")
+        print("เล่นเสียงแจ้งเตือน")
+
+        break
+    else:
+        pass
