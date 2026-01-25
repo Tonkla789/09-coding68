@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Reminder</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: "Segoe UI", sans-serif;
+    background: linear-gradient(135deg, #f0f0f0, #dcdcdc);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.app {
+    width: 420px;
+    height: 720px;
+    background: #ffffff;
+    border-radius: 24px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.header {
+    padding: 20px;
+    text-align: center;
+    font-size: 22px;
+    font-weight: bold;
+    background: #f7f7f7;
+}
+
+.content {
+    padding: 18px;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.section-title {
+    font-size: 14px;
+    color: #666;
+    margin-top: 10px;
+}
+
+input, button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 8px;
+    border-radius: 12px;
+    border: 1px solid #ccc;
+    font-size: 15px;
+}
+
+button {
+    background: #444;
+    color: white;
+    border: none;
+    margin-top: 14px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #333;
+}
+
+.emoji-bar span {
+    font-size: 22px;
+    margin-right: 8px;
+    cursor: pointer;
+}
+
+.reminder {
+    background: #f2f2f2;
+    border-radius: 14px;
+    padding: 12px;
+    margin-top: 12px;
+    font-size: 14px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+    <div class="header">⏰ Smart Reminder</div>
+
+    <div class="content">
+
+        <div class="section-title">ชื่อผู้ใช้</div>
+        <input id="username" placeholder="เช่น Tonkla">
+
+        <div class="section-title">สิ่งที่ต้องทำ</div>
+        <input id="task" placeholder="อ่านหนังสือ 📚">
+
+        <div class="emoji-bar">
+            <span onclick="addEmoji('📚')">📚</span>
+            <span onclick="addEmoji('🔥')">🔥</span>
+            <span onclick="addEmoji('📝')">📝</span>
+            <span onclick="addEmoji('💻')">💻</span>
+            <span onclick="addEmoji('⏰')">⏰</span>
+        </div>
+
+        <div class="section-title">เวลาแจ้งเตือน</div>
+        <input type="time" id="time">
+
+        <div class="section-title">เสียงแจ้งเตือน</div>
+        <input type="file" id="soundFile" accept="audio/*">
+
+        <button onclick="addReminder()">➕ เพิ่มแจ้งเตือน</button>
+
+        <div id="list"></div>
+
+    </div>
+</div>
+
+<audio id="alertSound"></audio>
+
+<script>
+let reminders = [];
+let audioUnlocked = false;
+
+function addEmoji(e) {
+    document.getElementById("task").value += e;
+}
+
+function addReminder() {
+    const name = document.getElementById("username").value;
+    const task = document.getElementById("task").value;
+    const time = document.getElementById("time").value;
+    const file = document.getElementById("soundFile").files[0];
+    const sound = document.getElementById("alertSound");
+
+    if (!name || !task || !time || !file) {
+        alert("กรุณากรอกข้อมูลให้ครบ");
+        return;
+    }
+
+    sound.src = URL.createObjectURL(file);
+
+    // ปลดล็อกเสียง (จำเป็น)
+    sound.play().then(() => {
+        sound.pause();
+        sound.currentTime = 0;
+        audioUnlocked = true;
+    });
+
+    reminders.push({
+        name: name,
+        task: task,
+        time: time,
+        triggered: false
+    });
+
+    document.getElementById("task").value = "";
+}
+
+setInterval(() => {
+    const now = new Date();
+    const list = document.getElementById("list");
+    list.innerHTML = "";
+
+    reminders.forEach(r => {
+        const [h, m] = r.time.split(":");
+        const alertTime = new Date();
+        alertTime.setHours(h, m, 0);
+
+        const diff = Math.floor((alertTime - now) / 1000);
+        let statusText = "";
+
+        if (diff > 0) {
+            statusText = `⏳ เหลือ ${Math.floor(diff / 60)} นาที ${diff % 60} วินาที`;
+        } else {
+            statusText = "🔔 ถึงเวลาแล้ว";
+            if (!r.triggered && audioUnlocked) {
+                document.getElementById("alertSound").play();
+                alert(`${r.name} ถึงเวลาทำ: ${r.task}`);
+                r.triggered = true;
+            }
+        }
+
+        list.innerHTML += `
+            <div class="reminder">
+                <strong>${r.name}</strong><br>
+                ${r.task}<br>
+                ${statusText}
+            </div>
+        `;
+    });
+}, 1000);
+</script>
+
+</body>
+</html>
